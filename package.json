@@ -1,0 +1,24 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "Node App Using SQL Database To Keep Track Of Employees",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JonathanHaws/Employee-Tracker.git"
+  },
+  "author": "Jonathan Haws / University Of Utah Bootcamp 2023",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JonathanHaws/Employee-Tracker/issues"
+  },
+  "homepage": "https://github.com/JonathanHaws/Employee-Tracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^8.2.4",
+    "mysql2": "^3.1.2"
+  }
+}
