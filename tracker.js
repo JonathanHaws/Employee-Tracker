@@ -9,39 +9,104 @@ const selectEmployee   = fs.readFileSync('db/select/employee.sql','utf8');
 const insertDepartment = fs.readFileSync('db/insert/department.sql','utf8');
 const insertRole       = fs.readFileSync('db/insert/role.sql','utf8');
 const insertEmployee   = fs.readFileSync('db/insert/employee.sql','utf8');
+const deleteDepartment = fs.readFileSync('db/delete/department.sql','utf8');
+const deleteRole       = fs.readFileSync('db/delete/role.sql','utf8');
+const deleteEmployee   = fs.readFileSync('db/delete/employee.sql','utf8');
 
 async function trackEmployees(){ 
+
+    async function promptDepartmentByName(promptMessage){
+        var departments = (await db.promise().query(selectDepartment))[0].map(row => row.name);
+        var {name}      = await inquirer.prompt({type:'list',name:'name',message:promptMessage,choices:departments});
+        var id          = departments.indexOf(name) + 1; 
+        return {id:id, name:name}
+    }
+    async function promptRoleByTitle(promptMessage){
+        var roles  = (await db.promise().query(selectRole))[0].map(row => row.title);
+        var {name} = await inquirer.prompt({type:'list',name:'name',message:promptMessage,choices:roles});
+        var id     = roles.indexOf(name) + 1;
+        return {id:id, name:name}   
+    }
+    async function promptEmployeeByName(promptMessage){
+        var employees = (await db.promise().query(selectEmployee))[0].map(row => row.first_name + ' ' + row.last_name);
+        var {name}    = await inquirer.prompt({type:'list',name:'name',message:promptMessage,choices:employees});
+        var id        = employees.indexOf(name) + 1; 
+        return {id:id, name:name}   
+    }
+    
+    async function promptForDepartment(){
+        var {name} = await inquirer.prompt({type:'input',message:'Name?',name:'name'});
+        console.log('Department Named'+ name);
+        return {name:name}
+    }
+    async function promptForRole(){
+        var {title}      = await inquirer.prompt({type:'input',message:'Title?',name:'title'});
+        var {salary}     = await inquirer.prompt({type:'input',message:'Salary?',name:'salary'});
+        var department   = await promptDepartmentByName('Department?');
+        console.log(title +' with a salary of '+ salary +' and department of '+ department.name);
+        return {title:title, salary:salary, department:department}   
+    }
+    async function promptForEmployee(){
+        var {firstName} = await inquirer.prompt({type:'input',message:'First name?',name:'firstName'});
+        var {lastName}  = await inquirer.prompt({type:'input',message:'Last name?',name:'lastName'});
+        var role        = await promptRoleByTitle('Which Role Will They Have?');
+        var manager     = await promptEmployeeByName('Who Will Be There Manager');
+        console.log(firstName +' '+ lastName +' with a role of '+ role.name +' and manager '+ manager.name);
+        return {firstName:firstName, lastName:lastName, role:role, manager:manager}
+    }
+
     while (true){ //Infinite Loop
-    var {action} = await inquirer.prompt({type:'list',message:'What would you like to do?',name:'action', choices:['View Departments','View Roles','View Employees','Add Department','Add Role','Add Employee','Update Role','Update Employee']});
+
+    var {action} = await inquirer.prompt({type:'list',message:'What would you like to do?',name:'action', choices:[
+        'View Departments',
+        'View Roles',
+        'View Employees',
+        'Add Department',
+        'Add Role',
+        'Add Employee',
+        'Update Department',
+        'Update Role',
+        'Update Employee',
+        'Delete Department',
+        'Delete Role',
+        'Delete Employee',
+    ]});
     switch(action){
-        case 'View Departments': console.table((await db.promise().query(selectDepartment))[0]); break;
-        case 'View Roles':       console.table((await db.promise().query(selectRole))[0]); break;
-        case 'View Employees':   console.table((await db.promise().query(selectEmployee))[0]); break;
-        case 'Add Department': 
-            var {departmentName} = await inquirer.prompt({type:'input',message:'Whats its name?',name:'departmentName'});
-            await db.execute(insertDepartment,[departmentName]);
-            console.log('Added '+ departmentName +' to the data base');
+        case 'View Departments':  
+            console.table((await db.promise().query(selectDepartment))[0]); 
             break;
-        case 'Add Role':  
-            var {roleTitle}      = await inquirer.prompt({type:'input',message:'Whats its title?',name:'roleTitle'});
-            var {roleSalary}     = await inquirer.prompt({type:'input',message:'Salary?',name:'roleSalary'});
-            var departments      = (await db.promise().query(selectDepartment))[0].map(row => row.name);
-            var {roleDepartment} = await inquirer.prompt({type:'list',message:'Department?',name:'roleDepartment',choices:departments});
-            var roleDepartmentId = departments.indexOf(roleDepartment) +1; //console.log(roleDepartmentId)
-            await db.execute(insertRole,[roleTitle,roleSalary,roleDepartmentId]);
-            console.log('Added '+ roleTitle +' to the data base with a salary of '+ roleSalary +' and department of '+ roleDepartment);
+        case 'View Roles':        
+            console.table((await db.promise().query(selectRole))[0]); 
             break;
-        case 'Add Employee': 
-            var {employeeFirstName} = await inquirer.prompt({type:'input',message:'Whats is there first name?',name:'employeeFirstName'});
-            var {employeeLastName}  = await inquirer.prompt({type:'input',message:'Whats is there last name?',name:'employeeLastName'});
-            var roles               = (await db.promise().query(selectRole))[0].map(row => row.title);
-            var {employeeRole}      = await inquirer.prompt({type:'list',name:'employeeRole',message:'Whats is there role?',choices:roles});
-            var employeeRoleId      = roles.indexOf(employeeRole) + 1; //console.log(employeeRoleId);
-            var employees           = (await db.promise().query(selectEmployee))[0].map(employee => employee.first_name + ' ' + employee.last_name);
-            var {employeeManager}   = await inquirer.prompt({type:'list',name:'employeeManager',message:'Who is there Manager',choices:employees});
-            var employeeManagerId   = employees.indexOf(employeeManager) + 1; //console.log(employeeManagerId);
-            await db.execute(insertEmployee,[employeeFirstName,employeeLastName,employeeRoleId,employeeManagerId]);
-            console.log('Added '+ employeeFirstName +' '+ employeeLastName +' with a role of '+ employeeRole +' and manager '+ employeeManager);
+        case 'View Employees':    
+            console.table((await db.promise().query(selectEmployee))[0]); 
+            break;
+        case 'Add Department':    
+            var department = await promptForDepartment(); 
+            await db.execute(insertDepartment,[department.name]);
+            break;
+        case 'Add Role':          
+            var role = await promptForRole(); 
+            await db.execute(insertRole,[role.title,role.salary,role.department.id]); 
+            break;
+        case 'Add Employee':      
+            var employee = await promptForEmployee(); 
+            await db.execute(insertEmployee,[employee.firstName,employee.lastName,employee.role.id,employee.manager.id]);
+            break;
+        case 'Delete Department': 
+            var department = await promptDepartmentByName('Which do you want to delete?');
+            await db.execute(deleteDepartment,[department.id]);
+            console.log('Deleted Department'+ department.name)
+            break;
+        case 'Delete Role':
+            var role = await promptRoleByTitle('Which do you want to delete?');
+            await db.execute(deleteRole,[role.id]);
+            console.log('Deleted Role'+ role.name);
+            break;
+        case 'Delete Employee': 
+            var employee = await promptEmployeeByName('Which do you want to delete?');
+            await db.execute(deleteEmployee,[employee.id]);
+            console.log('Deleted Employee '+ employee.name);
             break;
 }}}
 
