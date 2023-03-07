@@ -1,2 +1,1 @@
-INSERT INTO role (title, salary, department_id)
-SELECT ?, ?, id FROM department WHERE name = ?;
+INSERT INTO role (title, salary, department_id) SELECT ?,?,?;
